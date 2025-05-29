@@ -155,11 +155,11 @@ def get_weather_for_map(date, metric) -> pd.DataFrame:
     return df
 
 
-def to_excel(df: pd.DataFrame) -> bytes:
+def to_excel(df: pd.DataFrame, index=False, sheet_name="WeatherData") -> bytes:
     """Конвертирует DataFrame в Excel."""
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df.to_excel(writer, index=False, sheet_name="WeatherData")
+        df.to_excel(writer, index=index, sheet_name=sheet_name)
     output.seek(0)
     return output.getvalue()
 

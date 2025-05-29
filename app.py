@@ -1,9 +1,6 @@
 import streamlit as st
 from data import get_weather
-from views.main_dashboard import (display_metrics, display_charts_and_histograms,
-                                  display_table, display_download_button)
-from views.additional_dashboard import display_additional_metrics
-from views.sidebar import get_filters
+from views import main_dashboard, additional_dashboard, sidebar
 from utils.constants import LIMIT_WEATHER_RECORDS
 
 
@@ -11,7 +8,7 @@ def main():
     """Основная функция приложения."""
     st.title("Погодный дашборд")
 
-    weather_df = get_weather(*get_filters())
+    weather_df = get_weather(*sidebar.get_filters())
 
     if weather_df.empty:
         st.warning("Нет данных для выбранных фильтров.")
@@ -25,12 +22,15 @@ def main():
 
     tab1, tab2 = st.tabs(["Основной дашборд", "Дополнительные метрики"])
     with tab1:
-        display_metrics(weather_df)
-        display_charts_and_histograms(weather_df)
-        display_table(weather_df)
-        display_download_button(weather_df)
+        main_dashboard.display_metrics(weather_df)
+        main_dashboard.display_charts_and_histograms(weather_df)
+        main_dashboard.display_table(weather_df)
+        main_dashboard.display_download_button(weather_df)
     with tab2:
-        display_additional_metrics(weather_df)
+        additional_dashboard.display_additional_metrics(weather_df)
+        additional_dashboard.display_seasonal_statistics(weather_df)
+        additional_dashboard.display_download_button(weather_df)
+        additional_dashboard.display_map(weather_df)
 
 
 if __name__ == "__main__":

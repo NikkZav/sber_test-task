@@ -1,5 +1,6 @@
 import pandas as pd
-from utils.column_names import SEASON_NAMES
+import streamlit as st
+from utils.column_names import COLUMN_NAMES, STATISTICS_NAMES, SEASON_NAMES, rename_columns
 
 
 def calculate_avg_temp(df: pd.DataFrame) -> float:
@@ -62,6 +63,7 @@ def calculate_wind_direction_mode(df: pd.DataFrame) -> str:
 
 
 def calculate_max_wind_gust(df: pd.DataFrame) -> float:
+    """Определяет максимальную скорость порывов ветра."""
     return df["peak_wind_gust_kmh"].max()
 
 
@@ -70,8 +72,22 @@ def calculate_temp_precip_corr(df: pd.DataFrame) -> float:
     return df[["avg_temp_c", "precipitation_mm"]].corr().iloc[0, 1] if not df.empty else 0.0
 
 
-def calculate_seasonal_trends(df: pd.DataFrame, metrics: list[str]) -> pd.DataFrame:
+@st.cache_data
+def calculate_seasonal_statistics(df: pd.DataFrame, metrics: list[str]) -> pd.DataFrame:
     """Рассчитывает средни показатели по сезонам."""
-    return df[metrics + ["season"]].groupby("season").agg(
+    if df.empty:
+        return pd.DataFrame()
+    seasonal_stat = df[metrics + ["season"]].groupby("season").agg(
         ['mean', 'median', 'min', 'max']
-    ) if not df.empty else pd.DataFrame()
+    )
+    # Упорядочиваем строки в порядке Зима → Весна → Лето → Осень
+    seasonal_stat = seasonal_stat.reindex(SEASON_NAMES.keys())
+
+    # В Streamlit не работает column_config в dataframe когда есть multi-index, поэтому сразу
+    # Переводим индекс season на русский
+    seasonal_stat.index = [SEASON_NAMES.get(season, season) for season in seasonal_stat.index]
+    # Переводим столбцы
+    seasonal_stat.columns = rename_columns(seasonal_stat.columns,
+                                           translation_dict={**COLUMN_NAMES, **STATISTICS_NAMES})
+    print(seasonal_stat.head())
+    return seasonal_stat

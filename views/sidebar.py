@@ -1,4 +1,3 @@
-from email.policy import default
 import streamlit as st
 import pandas as pd
 from data import get_countries, get_cities

@@ -3,6 +3,7 @@ import pandas as pd
 
 COLUMN_NAMES = {
     "date": "Дата",
+    "season": "Сезон",
     "city_name": "Город",
     "avg_temp_c": "Температура (°C)",
     "min_temp_c": "Минимальная температура (°C)",
@@ -11,8 +12,9 @@ COLUMN_NAMES = {
     "snow_depth_mm": "Глубина снежного покрова (мм)",
     "avg_wind_speed_kmh": "Скорость ветра (км/ч)",
     "avg_wind_dir_deg": "Направление ветра (градусы)",
+    "peak_wind_gust_kmh": "Порывы ветра (км/ч)",
+    "avg_sea_level_pres_hpa": "Атмосферное давление (гПа)",
     "sunshine_total_min": "Продолжительность солнечного света (мин)",
-    "season": "Сезон",
 }
 
 STATISTICS_NAMES = {
@@ -31,12 +33,15 @@ SEASON_NAMES = {
     "Autumn": "Осень",
 }
 
-NUMBERS_FEATURES = [
+MAIN_METRICS = [
     "avg_temp_c",
     "precipitation_mm",
     "avg_wind_speed_kmh",
     "avg_wind_dir_deg",
+    "peak_wind_gust_kmh",
     "snow_depth_mm",
+    "avg_sea_level_pres_hpa",
+    # "sunshine_total_min"   # Не включаем, т.к. очень много пропусков
 ]
 
 
