@@ -78,8 +78,8 @@ def display_metrics(df: pd.DataFrame):
         st.metric("Средняя скорость ветра", f"{calculate_avg_wind_speed(df):.2f} км/ч")
 
 
-def display_visualizations(df: pd.DataFrame):
-    """Отображает визуализации."""
+def display_charts_and_histograms(df: pd.DataFrame):
+    """Отображает графики и диаграммы."""
     st.subheader("Линейный график")
     x_var_line = st.selectbox(
         "Ось X",
