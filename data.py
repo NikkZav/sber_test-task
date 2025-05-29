@@ -48,6 +48,9 @@ def prepare_data():
     df_weather = pd.read_parquet("data/daily_weather.parquet")
     logger.info(f"Загружено {len(df_weather)} строк из daily_weather.parquet")
 
+    # Нормализуем столбец date, убирая временную часть
+    df_weather["date"] = pd.to_datetime(df_weather["date"]).dt.date
+
     # Записываем данные в SQLite по частям
     chunksize = 100000  # Размер чанка для записи
     total_rows = len(df_weather)
@@ -57,14 +60,13 @@ def prepare_data():
         chunk.to_sql("weather", engine, if_exists="append" if i > 0 else "replace", index=False)
 
     with engine.connect() as conn:
-        conn.execute(text(
-            "CREATE INDEX IF NOT EXISTS idx_weather ON weather (date, city_name, season)"
-        ))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_weather ON weather (date, city_name, season)"))
         conn.commit()
 
     logger.info("Подготовка данных завершена")
 
 
+@st.cache_data
 def get_countries() -> pd.DataFrame:
     """Возвращает данные о странах."""
     engine = create_engine(f'sqlite:///{DB_PATH}')
@@ -74,6 +76,7 @@ def get_countries() -> pd.DataFrame:
     return df
 
 
+@st.cache_data
 def get_cities(countries: list = None) -> pd.DataFrame:
     """Возвращает данные о городах, возможно отфильтрованные по странам."""
     engine = create_engine(f'sqlite:///{DB_PATH}')
@@ -144,9 +147,10 @@ def get_weather_for_map(date, metric) -> pd.DataFrame:
     logger.info(f"Загрузка данных о погоде для карты на дату: {date} и метрику: {metric}")
     engine = create_engine(f'sqlite:///{DB_PATH}')
     with Session(engine) as session:
-        query = f"SELECT city_name, date, {metric} FROM weather WHERE DATE(date) = ?"
-        logger.info(f"Выполняется запрос: {query} с параметрами: {date}")
+        query = f"SELECT city_name, date, {metric} FROM weather WHERE date = ?"
+        logger.info(f"Выполняется запрос: {query} с параметром: {date}")
         df = pd.read_sql(query, session.bind, params=(pd.to_datetime(date).strftime('%Y-%m-%d'),))
+        logger.info(f"Возвращено строк: {len(df)}")
     df["date"] = pd.to_datetime(df["date"]).dt.date
     return df
 

@@ -73,8 +73,7 @@ def display_additional_metrics(df: pd.DataFrame):
         "Выберите дату для карты",
         min_value=MIN_DATE,
         max_value=MAX_DATE,
-        # value=df["date"].min(),
-        value=None,
+        value=df["date"].min(),
         format="YYYY.MM.DD"
     )
     metric_map = st.selectbox(
@@ -83,12 +82,6 @@ def display_additional_metrics(df: pd.DataFrame):
         key="map_metric",
         format_func=lambda x: COLUMN_NAMES[x]
     )
-    if selected_date is None:
-        st.warning('''Выберите дату для отображения карты.
-
-                   Загрузка данных может занять некоторое время.''')
-        st.plotly_chart(px.scatter_geo(), use_container_width=True)
-        return
     map_df = get_weather_for_map(selected_date, metric_map)
     logger.info(f"Map data shape: {map_df.shape}")
     agg_df = map_df.groupby("city_name")[metric_map].mean().reset_index()
