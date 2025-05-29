@@ -69,6 +69,13 @@ def get_filters():
         key="end_date"
     )
 
+    selected_days = (end_date - start_date).days
+    st.sidebar.title(
+        f"Выбран{'о' if selected_days != 1 else ''} {selected_days} "
+        f"{'дней' if selected_days > 4 or selected_days == 0
+           else ('день' if selected_days == 1 else 'дня')}"
+    )
+
     seasons = ["Spring", "Summer", "Autumn", "Winter"]
     selected_seasons = st.sidebar.multiselect(
         "Выберите сезоны",

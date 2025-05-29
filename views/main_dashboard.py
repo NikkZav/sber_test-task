@@ -69,9 +69,9 @@ def display_metrics(df: pd.DataFrame):
     st.subheader("Ключевые метрики")
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Средняя температура", f"{calculate_avg_temp(df):.2f} °C")
+        st.metric("Средняя температура", f"{calculate_avg_temp(df):+.2f} °C")
     with col2:
-        st.metric("Медиана температуры", f"{calculate_median_temp(df):.2f} °C")
+        st.metric("Медиана температуры", f"{calculate_median_temp(df):+.2f} °C")
     with col3:
         st.metric("Доля дней с осадками", f"{calculate_precip_days(df):.2f}%")
     with col4:

@@ -2,13 +2,10 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import logging
-from utils.column_names import COLUMN_NAMES
-from data import get_weather, get_cities, get_weather_for_map
-from services.metrics_calculator import (
-    calculate_extreme_temp_diff, calculate_temp_anomaly, calculate_avg_precip,
-    calculate_temp_precip_corr, calculate_snow_days, calculate_wind_direction_mode,
-    calculate_seasonal_trends
-)
+from utils.column_names import (COLUMN_NAMES, NUMBERS_FEATURES, SEASON_NAMES,
+                                STATISTICS_NAMES, rename_columns)
+from data import get_cities, get_weather_for_map
+from services import metrics_calculator as metrics
 from utils.constants import MIN_DATE, MAX_DATE
 
 # Настройка логирования
@@ -33,39 +30,35 @@ def display_additional_metrics(df: pd.DataFrame):
     """Отображает дополнительные метрики."""
     logger.info("Отображение дополнительных метрик")
     st.subheader("Дополнительные метрики")
-    # Получаем фильтры из st.session_state
-    countries = st.session_state.get("countries_multiselect", ["Russia"])
-    cities = st.session_state.get("cities_multiselect", ["Saint Petersburg"])
-    seasons = st.session_state.get("seasons_multiselect", ["Spring", "Summer", "Autumn", "Winter"])
-
-    # Запрашиваем исторические данные с теми же фильтрами, но за 2010–2020
-    # historical_df = get_weather(
-    #     countries=countries,
-    #     cities=cities,
-    #     seasons=seasons,
-    #     start_date="1990-01-01",
-    #     end_date="2020-12-31"
-    # )
-    # logger.info(f"Размер historical_df: {historical_df.shape}")
 
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("Разница экстремальных температур", f"{calculate_extreme_temp_diff(df):.2f} °C")
-        # st.metric("Температурная аномалия", f"{calculate_temp_anomaly(df, historical_df):.2f} °C")
-        st.metric("Средний уровень осадков", f"{calculate_avg_precip(df):.2f} мм")
+        st.metric("Диапазон средней температуры",
+                  '…'.join([f'{temp:+.2f}' for temp in metrics.calculate_range_temp(df)]) + " °C")
+        st.metric("Разница экстремальных температур",
+                  f"{metrics.calculate_extreme_temp_diff(df):.2f} °C")
+        st.metric("Преобладающее направление ветра", metrics.calculate_wind_direction_mode(df))
+        st.metric("Максимальный порыв ветра", f"{metrics.calculate_max_wind_gust(df):.2f} км/ч")
     with col2:
-        st.metric("Дни со снегом", calculate_snow_days(df))
-        st.metric("Преобладающее направление ветра", calculate_wind_direction_mode(df))
-        st.metric("Корреляция температуры и осадков", f"{calculate_temp_precip_corr(df):.2f}")
+        st.metric("Средний уровень осадков", f"{metrics.calculate_avg_precip(df):.2f} мм")
+        st.metric("Дни с дождём", metrics.calculate_rain_days(df))
+        st.metric("Дни со снегом", metrics.calculate_snow_days(df))
+        st.metric("Корреляция температуры и осадков",
+                  f"{metrics.calculate_temp_precip_corr(df):.2f}")
 
     st.subheader("Сезонные тренды")
-    seasonal_trends = calculate_seasonal_trends(df)
+    seasonal_trends = metrics.calculate_seasonal_trends(df, metrics=NUMBERS_FEATURES)
+    # Упорядочиваем строки в порядке Зима → Весна → Лето → Осень
+    seasonal_trends = seasonal_trends.reindex(SEASON_NAMES.keys())
+    # Переводим индекс season на русский
+    seasonal_trends.index = [SEASON_NAMES.get(season, season) for season in seasonal_trends.index]
+    # Переводим столбцы
+    seasonal_trends.columns = rename_columns(seasonal_trends.columns,
+                                             translation_dict={**COLUMN_NAMES, **STATISTICS_NAMES})
+
     st.dataframe(
         seasonal_trends,
-        column_config={
-            "season": "Сезон",
-            "avg_temp_c": "Средняя температура (°C)"
-        }
+        column_config={"widgets": st.column_config.Column(width="small")},
     )
 
     st.subheader("Карта")
@@ -83,7 +76,6 @@ def display_additional_metrics(df: pd.DataFrame):
         format_func=lambda x: COLUMN_NAMES[x]
     )
     map_df = get_weather_for_map(selected_date, metric_map)
-    logger.info(f"Map data shape: {map_df.shape}")
     agg_df = map_df.groupby("city_name")[metric_map].mean().reset_index()
     cities_df = get_cities()
     map_data = pd.merge(agg_df, cities_df[["city_name", "latitude", "longitude"]], on="city_name")
