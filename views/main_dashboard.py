@@ -1,9 +1,12 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from data import to_excel
+from repository import to_excel
 from services import metrics_calculator as metrics
 from utils.column_names import COLUMN_NAMES, MAIN_METRICS
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def create_line_plot(
@@ -61,7 +64,9 @@ def create_histogram(
 
 def display_metrics(df: pd.DataFrame):
     """Отображает ключевые метрики."""
+    logger.info("Отображение ключевых метрик")
     st.subheader("Ключевые метрики")
+
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric("Средняя температура", f"{metrics.calculate_avg_temp(df):+.2f} °C")
@@ -155,6 +160,8 @@ def display_histogram(df: pd.DataFrame, default_var="avg_wind_speed_kmh", defaul
 
 def display_charts_and_histograms(df: pd.DataFrame):
     """Отображает графики и диаграммы."""
+    logger.info("Отображает графики и диаграммы")
+
     display_line_plot(df, default_x="date", default_y="avg_temp_c")
     display_scatter_plot(df, default_x="avg_temp_c", default_y="avg_sea_level_pres_hpa",
                          default_color="season")
@@ -163,7 +170,9 @@ def display_charts_and_histograms(df: pd.DataFrame):
 
 def display_table(df: pd.DataFrame):
     """Отображает таблицу данных."""
+    logger.info("Отображение таблицы данных")
     st.subheader("Данные")
+
     all_metrics = st.checkbox("Выбрать все метрики", value=False, key="all_metrics")
     selected_metrics = st.multiselect(
         "Выберите метрики для таблицы",
@@ -182,6 +191,8 @@ def display_table(df: pd.DataFrame):
 
 def display_download_button(df: pd.DataFrame):
     """Отображает кнопку для скачивания данных."""
+    logger.info("Отображение кнопки скачивания")
+
     st.download_button(
         label="Скачать данные в .xlsx",
         data=to_excel(df[st.session_state.selected_table_metrics]),

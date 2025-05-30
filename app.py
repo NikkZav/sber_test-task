@@ -1,7 +1,8 @@
 import streamlit as st
-from data import get_weather
+from repository import get_weather
 from views import main_dashboard, additional_dashboard, sidebar
 from utils.constants import LIMIT_WEATHER_RECORDS
+from utils.logging_config import setup_logging
 
 
 def main():
@@ -34,4 +35,5 @@ def main():
 
 
 if __name__ == "__main__":
+    setup_logging()
     main()

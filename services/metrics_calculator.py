@@ -1,6 +1,9 @@
 import pandas as pd
 import streamlit as st
 from utils.column_names import COLUMN_NAMES, STATISTICS_NAMES, SEASON_NAMES, rename_columns
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def calculate_avg_temp(df: pd.DataFrame) -> float:
@@ -75,19 +78,26 @@ def calculate_temp_precip_corr(df: pd.DataFrame) -> float:
 @st.cache_data
 def calculate_seasonal_statistics(df: pd.DataFrame, metrics: list[str]) -> pd.DataFrame:
     """Рассчитывает средни показатели по сезонам."""
-    if df.empty:
-        return pd.DataFrame()
-    seasonal_stat = df[metrics + ["season"]].groupby("season").agg(
-        ['mean', 'median', 'min', 'max']
-    )
-    # Упорядочиваем строки в порядке Зима → Весна → Лето → Осень
-    seasonal_stat = seasonal_stat.reindex(SEASON_NAMES.keys())
+    logger.info("Начало расчёта сезонной статистики")
 
-    # В Streamlit не работает column_config в dataframe когда есть multi-index, поэтому сразу
-    # Переводим индекс season на русский
-    seasonal_stat.index = [SEASON_NAMES.get(season, season) for season in seasonal_stat.index]
-    # Переводим столбцы
-    seasonal_stat.columns = rename_columns(seasonal_stat.columns,
-                                           translation_dict={**COLUMN_NAMES, **STATISTICS_NAMES})
-    print(seasonal_stat.head())
-    return seasonal_stat
+    if df.empty:
+        logger.warning("Пустой DataFrame передан для сезонной статистики")
+        return pd.DataFrame()
+    try:
+        seasonal_stat = df[metrics + ["season"]].groupby("season").agg(
+            ['mean', 'median', 'min', 'max']
+        )
+        seasonal_stat = seasonal_stat.reindex(SEASON_NAMES.keys())  # Упорядочиваем строки
+        # В Streamlit не работает column_config в dataframe когда есть multi-index, поэтому сразу
+        # Переводим индекс season на русский
+        seasonal_stat.index = [SEASON_NAMES.get(season, season) for season in seasonal_stat.index]
+        # Переводим столбцы
+        seasonal_stat.columns = rename_columns(
+            seasonal_stat.columns,
+            translation_dict={**COLUMN_NAMES, **STATISTICS_NAMES}
+        )
+        logger.info(f"Сезонная статистика рассчитана: {seasonal_stat.shape}")
+        return seasonal_stat
+    except Exception as e:
+        logger.error(f"Ошибка при расчёте сезонной статистики: {e}")
+        raise e

@@ -8,3 +8,4 @@ DEFAULT_END = pd.to_datetime("2022-12-31").date()
 DAFAULT_TIMELINE_START = pd.to_datetime("2000-01-01").date()
 
 LIMIT_WEATHER_RECORDS = 30_000
+CHUNK_SIZE = 100_000

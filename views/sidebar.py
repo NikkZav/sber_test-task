@@ -1,7 +1,10 @@
 import streamlit as st
 import pandas as pd
-from data import get_countries, get_cities
+from repository import get_countries, get_cities
 from utils.constants import MIN_DATE, MAX_DATE, DEFAULT_START, DEFAULT_END, DAFAULT_TIMELINE_START
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_filters():
