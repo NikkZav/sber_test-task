@@ -8,7 +8,7 @@ from utils.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
 
-DB_PATH = Path("data/db.sqlite")
+DB_PATH = Path("./data/db.sqlite")
 
 
 def check_files_exist(required_files: list[str]) -> None:

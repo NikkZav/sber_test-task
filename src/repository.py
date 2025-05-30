@@ -9,15 +9,24 @@ from utils.constants import LIMIT_WEATHER_RECORDS
 
 logger = logging.getLogger(__name__)
 
-DB_PATH = Path("data/db.sqlite")
+DB_PATH = Path("./data/db.sqlite")
+logger.info(f"Путь к базе данных: {DB_PATH.resolve()}")
+
+try:
+    engine = create_engine(f'sqlite:///{DB_PATH}')
+except Exception as e:
+    logger.error(f"Ошибка при создании подключения к базе данных: {e}")
+    raise
 
 metadata = MetaData()
-engine = create_engine(f'sqlite:///{DB_PATH}')
 
-countries_table = Table("countries", metadata, autoload_with=engine)
-cities_table = Table("cities", metadata, autoload_with=engine)
-weather_table = Table("weather", metadata, autoload_with=engine)
-
+try:
+    countries_table = Table("countries", metadata, autoload_with=engine)
+    cities_table = Table("cities", metadata, autoload_with=engine)
+    weather_table = Table("weather", metadata, autoload_with=engine)
+except Exception as e:
+    logger.error(f"Ошибка при загрузке таблиц из базы данных: {e}")
+    raise
 
 @st.cache_data
 def get_countries() -> pd.DataFrame:

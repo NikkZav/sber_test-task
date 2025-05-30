@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 from repository import get_countries, get_cities
 from utils.constants import MIN_DATE, MAX_DATE, DEFAULT_START, DEFAULT_END, DAFAULT_TIMELINE_START
 import logging
@@ -72,11 +71,8 @@ def get_filters():
     )
 
     selected_days = (end_date - start_date).days
-    st.sidebar.title(
-        f"Выбран{'о' if selected_days != 1 else ''} {selected_days} "
-        f"{'дней' if selected_days > 4 or selected_days == 0
-           else ('день' if selected_days == 1 else 'дня')}"
-    )
+    days_word = "день" if selected_days == 1 else ("дня" if 2 <= selected_days <= 4 else "дней")
+    st.sidebar.title(f"Выбрано {selected_days} {days_word}")
 
     seasons = ["Spring", "Summer", "Autumn", "Winter"]
     selected_seasons = st.sidebar.multiselect(
