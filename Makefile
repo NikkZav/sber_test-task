@@ -1,5 +1,12 @@
 .PHONY: download-data unzip-data prepare-data build up local-run-with-data local-run-download-data docker-run-with-data docker-run-with-hub-image docker-run-download-data docker-run-download-data-with-hub-image down clean
 
+# Проверка и создание виртуального окружения
+venv:
+	@echo "Проверка виртуального окружения..."
+	@if [ ! -d "venv" ]; then python3 -m venv venv; fi
+	@echo "Установка зависимостей в виртуальное окружение..."
+	@. venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt
+
 # Загрузка датасета с Kaggle
 download-data:
 	@echo "Загрузка датасета..."
@@ -16,9 +23,9 @@ unzip-data:
 	@echo "Датасет распакован в data/"
 
 # Подготовка данных (создание SQLite базы)
-prepare-data:
+prepare-data: venv
 	@echo "Подготовка данных..."
-	@if [ -f data/db.sqlite ]; then echo "База данных data/db.sqlite уже существует, пропускаем создание"; else python src/data_loaders.py; fi
+	@if [ -f data/db.sqlite ]; then echo "База данных data/db.sqlite уже существует, пропускаем создание"; else . venv/bin/activate && python src/data_loaders.py; fi
 	@echo "Данные подготовлены, база данных в data/db.sqlite"
 
 # Сборка Docker-образа
@@ -34,11 +41,9 @@ up:
 	@echo "Приложение запущено на http://localhost:8501"
 
 # Локальный запуск с готовыми данными
-local-run-with-data:
-	@echo "Установка зависимостей..."
-	@pip install -r requirements.txt
+local-run-with-data: venv
 	@echo "Запуск приложения локально..."
-	@streamlit run src/app.py --server.port=8501 --server.address=0.0.0.0
+	@. venv/bin/activate && streamlit run src/app.py --server.port=8501 --server.address=0.0.0.0
 	@echo "Приложение запущено на http://localhost:8501"
 
 # Локальный запуск с загрузкой данных
@@ -52,7 +57,7 @@ docker-run-with-hub-image:
 	@echo "Скачивание образа из Docker Hub..."
 	@docker pull nikkizav/sber_test-task-app:latest
 	@echo "Запуск приложения с образом из Docker Hub..."
-	@docker run -d -p 8501:8501 -v $(pwd)/data:/app/data nikkizav/sber_test-task-app:latest
+	@docker run -d -p 8501:8501 -v ./data:/app/data nikkizav/sber_test-task-app:latest
 	@echo "Приложение запущено на http://localhost:8501"
 
 # Docker-запуск с загрузкой данных и локальной сборкой
@@ -61,10 +66,10 @@ docker-run-download-data: download-data unzip-data prepare-data build up
 # Docker-запуск с загрузкой данных и образом из Docker Hub
 docker-run-download-data-with-hub-image: download-data unzip-data prepare-data
 	@echo "Скачивание образа из Docker Hub..."
-	@docker pull nikkizav/sber_test-task-app:latest
+	@pull a docker nikkizav/sber_test-task-app:latest
 	@echo "Запуск приложения с образом из Docker Hub..."
-	@docker run -d -p 8501:8501 -v $(pwd)/data:/app/data nikkizav/sber_test-task-app:latest
-	@echo "Приложение запущено на http://localhost:8501"
+	@run -d -p 8501:8501 -v ./data:/app/data nikkizav/sber_test-task-app:latest
+	@echo "Приложение запущено на http://localhost:8501
 
 # Остановка приложения
 down:
